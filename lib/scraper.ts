@@ -108,6 +108,9 @@ async function getInstagramMediaFromHtml(url: string): Promise<DownloadResult> {
 }
 
 export async function getInstagramMedia(url: string): Promise<DownloadResult> {
+  // Clean the URL to remove tracking parameters like 'igsh'
+  url = url.split("?")[0];
+  
   // Method 1: GraphQL API
   try {
     console.log("Processing Instagram URL with GraphQL method:", url);
