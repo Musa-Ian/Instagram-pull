@@ -13,7 +13,7 @@ interface MediaItem {
 
 interface ResultsProps {
   media: MediaItem[]
-  onDownload: (url: string, index: number, type: string) => void
+  onDownload: (url: string, index: number, type: string, username?: string) => void
   onCopy: (url: string) => void;
 }
 

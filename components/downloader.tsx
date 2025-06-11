@@ -31,6 +31,9 @@ interface DownloadResult {
   media: MediaItem[]
   error?: string
   postType: "post" | "story" | "reel"
+  postInfo?: {
+    owner_username?: string
+  }
 }
 
 export default function Downloader() {
@@ -70,11 +73,20 @@ export default function Downloader() {
           description: `Found ${data.media.length} media item(s)`,
         })
       } else {
-        toast({
-          title: "Error",
-          description: data.error || "Failed to process URL",
-          variant: "destructive",
-        })
+        if (data.error && data.error.includes("age-restricted")) {
+          toast({
+            title: "Content Unavailable",
+            description: "This post may be private or age-restricted and requires a login to view.",
+            variant: "destructive",
+            duration: 9000,
+          })
+        } else {
+          toast({
+            title: "Error",
+            description: data.error || "Failed to process URL",
+            variant: "destructive",
+          })
+        }
       }
     } catch (error) {
       toast({
@@ -87,7 +99,7 @@ export default function Downloader() {
     }
   }
 
-  const downloadMedia = async (mediaUrl: string, index: number, type: string) => {
+  const downloadMedia = async (mediaUrl: string, index: number, type: string, username?: string) => {
     try {
       toast({ title: "Starting download...", description: "Please wait while we prepare your file." });
       
@@ -104,7 +116,7 @@ export default function Downloader() {
       const link = document.createElement('a');
       link.href = blobUrl;
       const extension = type === "video" ? "mp4" : "jpg";
-      const filename = `instagram_${type}_${index + 1}.${extension}`;
+      const filename = `Instagram Pull_${username || `media_${index + 1}`}.${extension}`;
       link.download = filename;
       
       document.body.appendChild(link);
@@ -172,7 +184,13 @@ export default function Downloader() {
                   <span className="font-medium">Media found!</span>
                   <Badge variant="secondary">{result.postType}</Badge>
                 </div>
-                <Results media={result.media} onDownload={downloadMedia} onCopy={copyUrlToClipboard} />
+                <Results
+                  media={result.media}
+                  onDownload={(mediaUrl, index, type) =>
+                    downloadMedia(mediaUrl, index, type, result.postInfo?.owner_username)
+                  }
+                  onCopy={copyUrlToClipboard}
+                />
               </div>
             ) : (
               <div className="space-y-2">

@@ -1,33 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import dynamic from "next/dynamic"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Download, Instagram, Smartphone, Copy, CheckCircle, Info } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { Download, Instagram, Smartphone, CheckCircle, Info } from "lucide-react"
+import ApiUrlDisplay from "@/components/api-url-display"
 
 const Downloader = dynamic(() => import("@/components/downloader"), { ssr: false })
 
 export default function HomePage() {
-  const [isClient, setIsClient] = useState(false)
-  const { toast } = useToast()
-
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  const copyApiUrl = () => {
-    if (!isClient) return
-    const apiUrl = `${window.location.origin}/api/download`
-    navigator.clipboard.writeText(apiUrl)
-    toast({
-      title: "Copied!",
-      description: "API URL copied to clipboard",
-    })
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
       <div className="container mx-auto px-4 py-8">
@@ -68,16 +49,7 @@ export default function HomePage() {
             <CardDescription>Use this API endpoint with iOS Shortcuts for seamless downloads</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <div className="flex items-center justify-between">
-                <code className="text-sm">
-                  {isClient ? `${window.location.origin}/api/download` : "/api/download"}
-                </code>
-                <Button size="sm" variant="outline" onClick={copyApiUrl}>
-                  <Copy className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
+            <ApiUrlDisplay />
             <div className="text-sm text-gray-600">
               <p>
                 <strong>Method:</strong> POST

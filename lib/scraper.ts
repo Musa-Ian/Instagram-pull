@@ -107,9 +107,62 @@ async function getInstagramMediaFromHtml(url: string): Promise<DownloadResult> {
   }
 }
 
+async function getInstagramMediaFromOembed(url: string): Promise<DownloadResult> {
+  try {
+    console.log("Attempting oEmbed scraping for:", url);
+    const oembedUrl = `https://api.instagram.com/oembed?url=${encodeURIComponent(url)}`;
+    const response = await fetch(oembedUrl);
+    
+    if (!response.ok) {
+      throw new Error(`oEmbed request failed with status ${response.status}`);
+    }
+
+    const responseText = await response.text();
+    // If we receive HTML, it's a login/age-gate wall.
+    if (responseText.trim().startsWith("<!DOCTYPE html>")) {
+      throw new Error("AGE_RESTRICTED");
+    }
+
+    const json = JSON.parse(responseText);
+    
+    if (!json.thumbnail_url) {
+      throw new Error("No media found in oEmbed response.");
+    }
+    
+    // oEmbed is limited; it only provides a thumbnail. We have to infer the content type.
+    // It's not perfect but a good last resort.
+    const isVideo = url.includes("/reel/") || url.includes("/tv/");
+
+    return {
+      success: true,
+      media: [{
+        url: json.thumbnail_url, // This will be lower quality
+        type: isVideo ? "video" : "image",
+        thumbnail: json.thumbnail_url
+      }],
+      postType: isVideo ? "reel" : "post",
+      postInfo: {
+        owner_username: json.author_name,
+      },
+    };
+
+  } catch (error: any) {
+    console.error("oEmbed scraping failed:", error);
+    // If we detected the specific age-restricted error, pass it up.
+    if (error.message === "AGE_RESTRICTED") {
+      throw new Error("This post may be private or age-restricted and cannot be downloaded.");
+    }
+    // Otherwise, continue to the final fallback.
+    return getInstagramMediaFromHtml(url);
+  }
+}
+
 export async function getInstagramMedia(url: string): Promise<DownloadResult> {
-  // Clean the URL to remove tracking parameters like 'igsh'
-  url = url.split("?")[0];
+  // Use a regex to extract the base URL, removing any tracking parameters
+  const urlMatch = url.match(/(https?:\/\/(?:www\.)?instagram\.com\/(?:p|reel|reels|stories|tv)\/[a-zA-Z0-9\-_]+)/);
+  if (urlMatch) {
+    url = urlMatch[0];
+  }
   
   // Method 1: GraphQL API
   try {
@@ -219,7 +272,72 @@ export async function getInstagramMedia(url: string): Promise<DownloadResult> {
 
   } catch (error: any) {
     console.error("Instagram GraphQL extraction failed, trying fallback:", error.message);
-    // If we land here, the primary method failed. Now we try the fallback.
-    return getInstagramMediaFromHtml(url);
+    // If we land here, the primary method failed. Now we try the oEmbed method.
+    return getInstagramMediaFromOembed(url);
+  }
+}
+
+function getUsernameFromUrl(url: string): string | null {
+  try {
+    const urlObject = new URL(url);
+    const pathParts = urlObject.pathname.split('/').filter(Boolean);
+    // For post URLs like /p/xxxx/, the username is in the post data, not the URL.
+    // But for profile URLs like /username/, it's the first part.
+    // The scraper needs to handle post URLs, but for a privacy check, we need to find a username if possible.
+    if (pathParts.length > 0 && pathParts[0] !== 'p' && pathParts[0] !== 'reel' && pathParts[0] !== 'reels' && pathParts[0] !== 'stories' && pathParts[0] !== 'tv') {
+      return pathParts[0];
+    }
+    // If it's a post/reel URL, we can't get username from URL alone. The main functions will get it from the post data.
+    return null;
+  } catch (error) {
+    console.error("Could not extract username from URL:", error);
+    return null;
+  }
+}
+
+export async function isProfilePrivate(url: string): Promise<boolean> {
+  const username = getUsernameFromUrl(url);
+  // If it's a post URL, we can't reliably check privacy without fetching the post,
+  // which defeats the purpose of a quick check. The main function will handle the error.
+  if (!username) {
+    return false; // Assume public to let the main download function try
+  }
+
+  try {
+    console.log(`Checking privacy for username: ${username}`);
+    const profileUrl = `https://www.instagram.com/${username}/`;
+    const response = await fetch(profileUrl);
+    const html = await response.text();
+
+    // Instagram embeds a JSON object with profile data in the HTML
+    const match = html.match(/<script type="application\/ld\+json">(.+?)<\/script>/);
+    if (match && match[1]) {
+      const jsonData = JSON.parse(match[1]);
+      // A common pattern for private profiles in this data
+      if (jsonData.mainEntityofPage?.interactionStatistic?.userInteractionCount === undefined) {
+          // This is a strong indicator of a private profile, but not guaranteed.
+          // The most reliable is checking the main JSON blob.
+      }
+    }
+    
+    // A more reliable method is finding the main sharedData object
+    const scriptTags = html.match(/<script type="text\/javascript">window\._sharedData = (.+?);<\/script>/);
+    if (scriptTags && scriptTags[1]) {
+        const sharedData = JSON.parse(scriptTags[1]);
+        const isPrivate = sharedData.entry_data?.ProfilePage?.[0]?.graphql?.user?.is_private;
+        if (typeof isPrivate === 'boolean') {
+            console.log(`Profile is private: ${isPrivate}`);
+            return isPrivate;
+        }
+    }
+    
+    // Fallback if the above structures change
+    return html.includes('"is_private":true');
+
+  } catch (error) {
+    console.error("Failed to check profile privacy:", error);
+    // If we can't determine privacy for any reason, assume it's public
+    // and let the main download function handle the potential failure.
+    return false;
   }
 } 

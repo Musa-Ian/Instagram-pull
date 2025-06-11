@@ -1,5 +1,4 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { Readable } from 'stream';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -18,34 +17,21 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Ensure the body is a readable stream
     if (!response.body) {
       return new NextResponse('Response body is empty', { status: 500 });
     }
 
-    const reader = response.body.getReader();
-    const stream = new Readable({
-      read() {
-        reader.read().then(({ done, value }) => {
-          if (done) {
-            this.push(null);
-          } else {
-            this.push(value);
-          }
-        });
-      },
-    });
-
-    const contentType = response.headers.get('Content-Type') || 'application/octet-stream';
+    const contentType =
+      response.headers.get('Content-Type') || 'application/octet-stream';
     const extension = contentType.startsWith('image/') ? 'jpg' : 'mp4';
     const filename = `download.${extension}`;
-    
-    // @ts-ignore
-    return new NextResponse(stream, {
-      headers: {
-        'Content-Type': contentType,
-        'Content-Disposition': `attachment; filename="${filename}"`,
-      },
+
+    const headers = new Headers();
+    headers.set('Content-Type', contentType);
+    headers.set('Content-Disposition', `attachment; filename="${filename}"`);
+
+    return new NextResponse(response.body, {
+      headers: headers,
     });
   } catch (error) {
     console.error('Proxy error:', error);

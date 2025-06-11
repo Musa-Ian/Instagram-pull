@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { getInstagramMedia, DownloadResult } from "@/lib/scraper"
+import { getInstagramMedia, DownloadResult, isProfilePrivate } from "@/lib/scraper"
 import { z } from "zod"
 
 interface MediaItem {
@@ -28,6 +28,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // New: Check if the profile is private before proceeding
+    if (await isProfilePrivate(url)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "This profile is private. Private posts cannot be downloaded.",
+        },
+        { status: 403 } // 403 Forbidden is appropriate here
+      );
+    }
+
     console.log("Received URL:", url)
 
     const result: DownloadResult = await getInstagramMedia(url)
@@ -36,17 +47,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: result.error || "No media found or failed to fetch.",
+          error: result.error || "The requested post could not be found. It may be private, deleted, or age-restricted.",
         },
-        { status: 500 }
+        { status: 404 }
       )
     }
 
     // Check for a custom header to determine if the request is from the shortcut
-    const clientType = request.headers.get("X-Client-Type");
+const clientType = request.headers.get("X-Client-Type")?.toLowerCase();
 
-    if (clientType === 'shortcut') {
-      // If it's the shortcut, return proxied URLs
+if (clientType === 'shortcut') {
+   // …
       const proxyBaseUrl = `${new URL(request.url).origin}/api/proxy?url=`;
       const proxiedResult = {
         ...result,
