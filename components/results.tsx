@@ -3,7 +3,7 @@
 import Image from "next/image"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Download } from "lucide-react"
+import { Download, Copy } from "lucide-react"
 
 interface MediaItem {
   url: string
@@ -14,9 +14,10 @@ interface MediaItem {
 interface ResultsProps {
   media: MediaItem[]
   onDownload: (url: string, index: number, type: string) => void
+  onCopy: (url: string) => void;
 }
 
-export default function Results({ media, onDownload }: ResultsProps) {
+export default function Results({ media, onDownload, onCopy }: ResultsProps) {
   // Filter out media items that don't have a valid URL
   const validMedia = media.filter(item => typeof item.url === 'string' && item.url.startsWith('http'));
 
@@ -43,14 +44,24 @@ export default function Results({ media, onDownload }: ResultsProps) {
                 />
               </div>
             )}
-            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
               <Button
-                size="lg"
+                size="icon"
                 onClick={() => onDownload(item.url, index, item.type)}
                 disabled={!item.url}
-                className="rounded-full h-14 w-14 p-0"
+                className="rounded-full h-12 w-12 bg-white/20 hover:bg-white/30 backdrop-blur-sm"
+                title="Download"
               >
-                <Download className="w-6 h-6" />
+                <Download className="w-5 h-5" />
+              </Button>
+              <Button
+                size="icon"
+                onClick={() => onCopy(item.url)}
+                disabled={!item.url}
+                className="rounded-full h-12 w-12 bg-white/20 hover:bg-white/30 backdrop-blur-sm"
+                title="Copy Link"
+              >
+                <Copy className="w-5 h-5" />
               </Button>
             </div>
           </div>

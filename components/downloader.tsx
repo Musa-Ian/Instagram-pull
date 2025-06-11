@@ -89,40 +89,48 @@ export default function Downloader() {
 
   const downloadMedia = async (mediaUrl: string, index: number, type: string) => {
     try {
-      const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, "-")
-      const extension = type === "video" ? "mp4" : "jpg"
-      const filename = `instagram_${type}_${timestamp}_${index + 1}.${extension}`
-
-      if (mediaUrl.startsWith("http")) {
-        const link = document.createElement("a")
-        link.href = mediaUrl
-        link.download = filename
-        link.target = "_blank"
-        link.rel = "noopener noreferrer"
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-
-        toast({
-          title: "Download Started",
-          description: `${type} download initiated`,
-        })
-      } else {
-        toast({
-          title: "Invalid URL",
-          description: "Unable to download this media",
-          variant: "destructive",
-        })
+      toast({ title: "Starting download...", description: "Please wait while we prepare your file." });
+      
+      // Use the proxy to fetch the media
+      const response = await fetch(`/api/proxy?url=${encodeURIComponent(mediaUrl)}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch via proxy: ${response.statusText}`);
       }
+      
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      const extension = type === "video" ? "mp4" : "jpg";
+      const filename = `instagram_${type}_${index + 1}.${extension}`;
+      link.download = filename;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      window.URL.revokeObjectURL(blobUrl);
+
+      toast({ title: "Download started!", description: `Your ${type} is saving.` });
     } catch (error) {
-      console.error("Download error:", error)
+      console.error("Download error:", error);
       toast({
         title: "Download Failed",
-        description: "Unable to download media",
+        description: "Could not download the file. Try copying the link.",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
+
+  const copyUrlToClipboard = (url: string) => {
+    navigator.clipboard.writeText(url);
+    toast({
+      title: "Copied to Clipboard!",
+      description: "The media URL has been copied.",
+    });
+  };
 
   return (
     <Card className="max-w-2xl mx-auto mb-8">
@@ -164,7 +172,7 @@ export default function Downloader() {
                   <span className="font-medium">Media found!</span>
                   <Badge variant="secondary">{result.postType}</Badge>
                 </div>
-                <Results media={result.media} onDownload={downloadMedia} />
+                <Results media={result.media} onDownload={downloadMedia} onCopy={copyUrlToClipboard} />
               </div>
             ) : (
               <div className="space-y-2">
