@@ -6,18 +6,19 @@ Built by **Ian Musa**
 
 ## Features
 
-- 🎯 Download Instagram posts, stories, and reels
-- 📱 iOS Shortcuts integration
-- 🚀 No external APIs required
-- 🎨 Modern, responsive UI
-- 📋 Simple and fast processing
+- 🎯 **Download Everything**: Handles single photos, carousel posts, reels, and videos.
+- 📱 **iOS Shortcuts Integration**: One-tap downloading from the Instagram app.
+- 🚀 **No External APIs**: Works directly with Instagram, no third-party services or keys required.
+- 🎨 **Modern & Responsive UI**: Clean and easy to use on any device.
+- 🔒 **Privacy-Focused**: No login required. All processing happens on the server.
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
-- **Backend**: Next.js API Routes
+- **Framework**: Next.js 15 (React)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
 - **UI Components**: shadcn/ui
-- **Instagram Integration**: [instagram-url-direct](https://github.com/victorsouzaleal/instagram-direct-url)
+- **Backend**: Next.js API Routes
 
 ## Installation
 
@@ -41,13 +42,13 @@ npm run dev
 
 ## How It Works
 
-This application uses the `instagram-url-direct` npm package which:
-- Directly extracts media URLs from Instagram posts
-- Works without requiring any external APIs or API keys
-- Handles posts, reels, and IGTV content
-- Returns direct CDN links for downloading
+This application uses a custom-built scraper that fetches media information directly from Instagram's GraphQL API. This method is more robust and reliable than legacy approaches.
 
-**No API keys or external services required!**
+1.  **Input**: Takes a public Instagram post URL.
+2.  **Extraction**: The backend makes a server-side request to Instagram's internal API to retrieve the post's data, including direct links to all photos and videos.
+3.  **Response**: Returns a clean JSON object with CDN URLs for all media, which can be downloaded directly.
+
+**No API keys or external services are required!**
 
 ## Supported Content
 
@@ -107,23 +108,49 @@ Content-Type: application/json
 
 ## iOS Shortcuts Integration
 
-### Quick Setup
+Set up a shortcut to download any Instagram post directly from the share sheet.
 
-1. **Create New Shortcut** in iOS Shortcuts app
-2. **Add "Get URLs from Input"** action
-3. **Add "Get Contents of URL"** action:
-   - URL: \`https://your-domain.com/api/download\`
-   - Method: \`POST\`
-   - Headers: \`Content-Type: application/json\`
-   - Body: \`{"url": "[URLs from Input]"}\`
-4. **Add "Get Dictionary Value"** for "media"
-5. **Add "Repeat with Each"** for media array
-6. **Add "Get Dictionary Value"** for "url" inside repeat
-7. **Add "Download URL"** to save media
+**Final Shortcut Preview:**
+![Final Shortcut](https://i.imgur.com/example.png) *(This is a placeholder, a real screenshot would go here)*
 
-### Detailed Instructions
+### Step-by-Step Instructions
 
-[Previous detailed iOS Shortcuts instructions remain the same...]
+1.  **Create a New Shortcut**
+    - Open the **Shortcuts** app and tap the **+** icon to create a new shortcut.
+    - Tap "Add Action".
+
+2.  **Receive Input from Share Sheet**
+    - Search for and add the **"Get URL from Input"** action. This allows the shortcut to accept the Instagram link when you use the Share button in the app.
+    - Tap the blue "Any" text and ensure that **"Shortcut Input"** is selected.
+
+3.  **Make the API Request**
+    - Search for and add the **"Get Contents of URL"** action.
+    - Configure it as follows:
+        - **URL**: `https://your-deployed-app-url.com/api/download` (Replace with your Vercel URL).
+        - **Method**: Tap "GET" and change it to **POST**.
+        - **Headers**: Add a new header:
+            - **Key**: `Content-Type`
+            - **Text**: `application/json`
+        - **Request Body**: Select **JSON** and add a new field:
+            - **Key**: `url`
+            - **Text**: Tap the "Text" field, select the "Magic Wand" icon (or variable icon), and choose **URL**. This passes the Instagram link to the API.
+
+    ![API Request Setup](https://i.imgur.com/example2.png) *(Placeholder)*
+
+4.  **Process the Response**
+    - Add a **"Get Dictionary from Input"** action. Set the input to **Contents of URL**.
+    - Add a **"Get Dictionary Value"** action. Set the key to **media**. This extracts the list of media items.
+
+5.  **Loop Through Media and Download**
+    - Add a **"Repeat with Each"** action. The input should automatically be the **Dictionary Value** from the previous step.
+    - Inside the `Repeat` block, add another **"Get Dictionary Value"** action. Set the key to **url**. This gets the direct download URL for each photo/video.
+    - Finally, add a **"Save to Photo Album"** action. The input should be the **Dictionary Value** from the step above. You can choose which album to save to.
+
+6.  **Name and Configure the Shortcut**
+    - Give your shortcut a name (e.g., "Insta-Pull").
+    - Tap the **(i)** icon at the bottom and enable **"Show in Share Sheet"**. This makes it accessible from Instagram.
+
+Now, go to any public Instagram post, tap the Share button, and select "Insta-Pull" from the list to download all its media!
 
 ## Troubleshooting
 
@@ -193,7 +220,6 @@ If you encounter any issues:
 
 ## Acknowledgments
 
-- [instagram-url-direct](https://github.com/victorsouzaleal/instagram-direct-url) - Core Instagram extraction
 - [shadcn/ui](https://ui.shadcn.com/) - UI components
 - [Next.js](https://nextjs.org/) - React framework
 
