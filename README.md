@@ -128,9 +128,13 @@ Set up a shortcut to download any Instagram post directly from the share sheet.
     - Configure it as follows:
         - **URL**: `https://your-deployed-app-url.com/api/download` (Replace with your Vercel URL).
         - **Method**: Tap "GET" and change it to **POST**.
-        - **Headers**: Add a new header:
-            - **Key**: `Content-Type`
-            - **Text**: `application/json`
+        - **Headers**: Add **two** headers:
+            - **Header 1**:
+              - **Key**: `Content-Type`
+              - **Text**: `application/json`
+            - **Header 2 (Important for reliability)**:
+              - **Key**: `X-Client-Type`
+              - **Text**: `shortcut`
         - **Request Body**: Select **JSON** and add a new field:
             - **Key**: `url`
             - **Text**: Tap the "Text" field, select the "Magic Wand" icon (or variable icon), and choose **URL**. This passes the Instagram link to the API.

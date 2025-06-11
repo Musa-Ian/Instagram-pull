@@ -42,6 +42,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check for a custom header to determine if the request is from the shortcut
+    const clientType = request.headers.get("X-Client-Type");
+
+    if (clientType === 'shortcut') {
+      // If it's the shortcut, return proxied URLs
+      const proxyBaseUrl = `${new URL(request.url).origin}/api/proxy?url=`;
+      const proxiedResult = {
+        ...result,
+        media: result.media.map(item => ({
+          ...item,
+          url: `${proxyBaseUrl}${encodeURIComponent(item.url)}`,
+          thumbnail: item.thumbnail ? `${proxyBaseUrl}${encodeURIComponent(item.thumbnail)}` : undefined,
+        })),
+      };
+      return NextResponse.json(proxiedResult);
+    }
+
+    // Otherwise, for web clients, return the direct CDN URLs
     return NextResponse.json(result)
   } catch (error) {
     console.error("Handler error:", error)
