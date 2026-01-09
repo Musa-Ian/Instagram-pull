@@ -41,7 +41,6 @@ export default function Results({ media, onDownload, onCopy }: ResultsProps) {
                 fill
                 sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
                 className="object-cover transition-transform group-hover:scale-105"
-                unoptimized
               />
             ) : (
               <div className="w-full h-full bg-black flex items-center justify-center relative">
@@ -60,7 +59,6 @@ export default function Results({ media, onDownload, onCopy }: ResultsProps) {
                         alt={`Video Thumbnail ${index + 1}`}
                         fill
                         className="object-cover transition-transform group-hover:scale-105"
-                        unoptimized
                       />
                     ) : (
                       <div className="w-full h-full bg-gray-900" />
