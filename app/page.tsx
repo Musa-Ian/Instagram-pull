@@ -99,7 +99,7 @@ export default function HomePage() {
 
         {/* Footer */}
         <div className="text-center mt-12 pt-8 border-t">
-          <p className="text-gray-500 text-sm">© 2024 Instagram Pull by Ian Musa. Open source project.</p>
+          <p className="text-gray-500 text-sm">© {new Date().getFullYear()} Instagram Pull by Ian Musa. Open source project.</p>
         </div>
       </div>
     </div>

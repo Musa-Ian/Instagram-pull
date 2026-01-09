@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -18,6 +15,7 @@ const nextConfig = {
       },
     ],
   },
+  reactCompiler: true,
 }
 
 export default nextConfig
