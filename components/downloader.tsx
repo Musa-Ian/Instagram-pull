@@ -102,27 +102,27 @@ export default function Downloader() {
   const downloadMedia = async (mediaUrl: string, index: number, type: string, username?: string) => {
     try {
       toast({ title: "Starting download...", description: "Please wait while we prepare your file." });
-      
+
       // Use the proxy to fetch the media
       const response = await fetch(`/api/proxy?url=${encodeURIComponent(mediaUrl)}`);
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch via proxy: ${response.statusText}`);
       }
-      
+
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
-      
+
       const link = document.createElement('a');
       link.href = blobUrl;
       const extension = type === "video" ? "mp4" : "jpg";
       const filename = `Instagram Pull_${username || `media_${index + 1}`}.${extension}`;
       link.download = filename;
-      
+
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       window.URL.revokeObjectURL(blobUrl);
 
       toast({ title: "Download started!", description: `Your ${type} is saving.` });
@@ -135,6 +135,30 @@ export default function Downloader() {
       });
     }
   };
+
+  const handleDownloadAll = async () => {
+    if (!result || !result.media) return;
+
+    toast({
+      title: "Starting Batch Download",
+      description: `Preparing to download ${result.media.length} items...`,
+    });
+
+    for (let i = 0; i < result.media.length; i++) {
+      const item = result.media[i];
+      if (item.url) {
+        // Add a small delay between downloads to prevent browser throttling
+        await new Promise(resolve => setTimeout(resolve, 800));
+        await downloadMedia(item.url, i, item.type, result.postInfo?.owner_username);
+      }
+    }
+
+    toast({
+      title: "Batch Download Complete",
+      description: "All valid media items have been processed.",
+    });
+  };
+
 
   const copyUrlToClipboard = (url: string) => {
     navigator.clipboard.writeText(url);
@@ -179,10 +203,18 @@ export default function Downloader() {
           <div className="mt-6">
             {result.success ? (
               <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="font-medium">Media found!</span>
-                  <Badge variant="secondary">{result.postType}</Badge>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <span className="font-medium">Media found!</span>
+                    <Badge variant="secondary">{result.postType}</Badge>
+                  </div>
+                  {result.media.length > 1 && (
+                    <Button variant="outline" size="sm" onClick={handleDownloadAll}>
+                      <Download className="w-4 h-4 mr-2" />
+                      Download All ({result.media.length})
+                    </Button>
+                  )}
                 </div>
                 <Results
                   media={result.media}
@@ -191,6 +223,11 @@ export default function Downloader() {
                   }
                   onCopy={copyUrlToClipboard}
                 />
+                {result.media.length > 1 && (
+                  <Button className="w-full mt-4" onClick={handleDownloadAll}>
+                    Download All Media
+                  </Button>
+                )}
               </div>
             ) : (
               <div className="space-y-2">
@@ -209,4 +246,4 @@ export default function Downloader() {
       </CardContent>
     </Card>
   )
-} 
+}
