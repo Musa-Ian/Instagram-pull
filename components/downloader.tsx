@@ -209,12 +209,6 @@ export default function Downloader() {
                     <span className="font-medium">Media found!</span>
                     <Badge variant="secondary">{result.postType}</Badge>
                   </div>
-                  {result.media.length > 1 && (
-                    <Button variant="outline" size="sm" onClick={handleDownloadAll}>
-                      <Download className="w-4 h-4 mr-2" />
-                      Download All ({result.media.length})
-                    </Button>
-                  )}
                 </div>
                 <Results
                   media={result.media}
