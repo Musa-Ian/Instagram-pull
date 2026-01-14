@@ -68,8 +68,8 @@ export default function HomePage() {
         <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
           <Card>
             <CardContent className="pt-6">
-              <div className="text-center">
-                <Download className="w-8 h-8 text-blue-600 mx-auto mb-3" />
+              <div className="flex flex-col items-center text-center">
+                <Download className="w-8 h-8 text-blue-600 mb-3" />
                 <h3 className="font-semibold mb-2">Multiple Methods</h3>
                 <p className="text-sm text-gray-600">Uses 4 different extraction methods for maximum success</p>
               </div>
@@ -78,8 +78,8 @@ export default function HomePage() {
 
           <Card>
             <CardContent className="pt-6">
-              <div className="text-center">
-                <Smartphone className="w-8 h-8 text-green-600 mx-auto mb-3" />
+              <div className="flex flex-col items-center text-center">
+                <Smartphone className="w-8 h-8 text-green-600 mb-3" />
                 <h3 className="font-semibold mb-2">iOS Shortcuts</h3>
                 <p className="text-sm text-gray-600">Seamless integration with iOS Shortcuts app</p>
               </div>
@@ -88,8 +88,8 @@ export default function HomePage() {
 
           <Card>
             <CardContent className="pt-6">
-              <div className="text-center">
-                <CheckCircle className="w-8 h-8 text-purple-600 mx-auto mb-3" />
+              <div className="flex flex-col items-center text-center">
+                <CheckCircle className="w-8 h-8 text-purple-600 mb-3" />
                 <h3 className="font-semibold mb-2">Reliable</h3>
                 <p className="text-sm text-gray-600">Automatic fallback system for maximum success rate</p>
               </div>
