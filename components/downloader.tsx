@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Download, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import JSZip from "jszip"
 
 const Results = dynamic(() => import("@/components/results"), {
   ssr: false,
@@ -136,8 +137,78 @@ export default function Downloader() {
     }
   };
 
+  const handleZipDownload = async () => {
+    if (!result || !result.media) return;
+
+    try {
+      toast({
+        title: "Preparing Zip",
+        description: "Compressing media files...",
+      });
+
+      const zip = new JSZip();
+      const folder = zip.folder(`Instagram_Pull_${result.postInfo?.owner_username || "media"}`);
+
+      let count = 0;
+
+      for (let i = 0; i < result.media.length; i++) {
+        const item = result.media[i];
+        if (item.url) {
+          try {
+            const response = await fetch(`/api/proxy?url=${encodeURIComponent(item.url)}`);
+            if (response.ok) {
+              const blob = await response.blob();
+              const extension = item.type === "video" ? "mp4" : "jpg";
+              const filename = `${result.postInfo?.owner_username || "media"}_${i + 1}.${extension}`;
+              folder?.file(filename, blob);
+              count++;
+            }
+          } catch (err) {
+            console.error(`Failed to zip file ${i}`, err);
+          }
+        }
+      }
+
+      if (count === 0) {
+        throw new Error("No files could be downloaded for zipping");
+      }
+
+      const content = await zip.generateAsync({ type: "blob" });
+      const zipUrl = window.URL.createObjectURL(content);
+
+      const link = document.createElement('a');
+      link.href = zipUrl;
+      link.download = `Instagram_Pull_${result.postInfo?.owner_username || "download"}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(zipUrl);
+
+      toast({
+        title: "Download Complete",
+        description: "Your zip file has been downloaded.",
+      });
+
+    } catch (error) {
+      console.error("Zip error:", error);
+      toast({
+        title: "Zip Download Failed",
+        description: "Could not create zip file.",
+        variant: "destructive",
+      });
+    }
+  };
+
+
   const handleDownloadAll = async () => {
     if (!result || !result.media) return;
+
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      await handleZipDownload();
+      return;
+    }
 
     toast({
       title: "Starting Batch Download",
