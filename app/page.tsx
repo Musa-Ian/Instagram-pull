@@ -5,17 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Download, Instagram, Smartphone, CheckCircle, Info } from "lucide-react"
 import ApiUrlDisplay from "@/components/api-url-display"
-import { ModeToggle } from "@/components/mode-toggle"
 
 const Downloader = dynamic(() => import("@/components/downloader"), { ssr: false })
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
-      <div className="container mx-auto px-4 py-8 relative">
-        <div className="absolute top-4 right-4">
-          <ModeToggle />
-        </div>
+      <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-3 mb-4">
