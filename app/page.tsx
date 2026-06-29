@@ -3,7 +3,8 @@
 import dynamic from "next/dynamic"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Download, Instagram, Smartphone, CheckCircle, Info } from "lucide-react"
+import { Download, Smartphone, CheckCircle, Info } from "lucide-react"
+import { InstagramIcon } from "@/components/instagram-icon"
 import ApiUrlDisplay from "@/components/api-url-display"
 
 const Downloader = dynamic(() => import("@/components/downloader"), { ssr: false })
@@ -15,7 +16,7 @@ export default function HomePage() {
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <Instagram className="w-8 h-8 text-pink-600" />
+            <InstagramIcon className="w-8 h-8 text-pink-600" />
             <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
               Instagram Pull
             </h1>
